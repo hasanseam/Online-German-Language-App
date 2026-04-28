@@ -1,24 +1,40 @@
-import { useNavigate, useOutletContext } from "react-router";
+import { useNavigate, useOutletContext, Link } from "react-router";
 import { useState } from "react";
-import { Mail, Lock } from "lucide-react";
+import { Mail, Lock, AlertCircle, Loader2 } from "lucide-react";
+import { authService } from "../services/auth.service";
 
 export function Login() {
   const navigate = useNavigate();
-  const { setIsLoggedIn, setIsAdmin } = useOutletContext<any>();
+  const { setIsLoggedIn, setIsAdmin, setUser } = useOutletContext<any>();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Mock login - in real app this would call an API
-    setIsLoggedIn(true);
+    setError("");
+    setIsLoading(true);
 
-    // If admin credentials, set admin flag
-    if (email === "admin@deutschlernen.com") {
-      setIsAdmin(true);
-      navigate("/admin");
-    } else {
-      navigate("/courses");
+    try {
+      await authService.login({ email, password });
+      const payload = authService.getPayload();
+      const userProfile = await authService.getUserProfile();
+      
+      setUser(userProfile);
+      setIsLoggedIn(true);
+      
+      if (payload?.role === "ADMIN") {
+        setIsAdmin(true);
+        navigate("/admin");
+      } else {
+        setIsAdmin(false);
+        navigate("/courses");
+      }
+    } catch (err: any) {
+      setError(err.message || "Invalid credentials. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -35,6 +51,13 @@ export function Login() {
           </div>
           <h2 className="text-3xl text-center mb-2 text-gray-800">Anmelden</h2>
           <p className="text-center text-gray-600 mb-8">Login to Your Account</p>
+
+          {error && (
+            <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-600 text-red-700 flex items-center gap-3 rounded-r-lg">
+              <AlertCircle className="w-5 h-5 flex-shrink-0" />
+              <p className="text-sm font-medium">{error}</p>
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
@@ -69,26 +92,21 @@ export function Login() {
 
             <button
               type="submit"
-              className="w-full bg-gradient-to-r from-red-600 to-black text-white py-3 rounded-lg hover:from-red-700 hover:to-gray-900 hover:scale-105 transition-all duration-300 font-semibold shadow-lg"
+              disabled={isLoading}
+              className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-red-600 to-black text-white py-3 rounded-lg hover:from-red-700 hover:to-gray-900 hover:scale-105 transition-all duration-300 font-semibold shadow-lg disabled:opacity-70 disabled:hover:scale-100 disabled:cursor-not-allowed"
             >
-              Login
+              {isLoading && <Loader2 className="w-5 h-5 animate-spin" />}
+              {isLoading ? "Anmelden..." : "Login"}
             </button>
           </form>
 
           <p className="text-center mt-6 text-gray-600">
             Don't have an account?{" "}
-            <a href="/register" className="text-red-600 hover:underline font-semibold">
+            <Link to="/register" className="text-red-600 hover:underline font-semibold">
               Register here
-            </a>
+            </Link>
           </p>
 
-          <div className="mt-6 p-4 bg-yellow-50 rounded-lg border-l-4 border-red-600">
-            <p className="text-sm text-gray-700">
-              <strong>Demo-Anmeldedaten:</strong><br />
-              Admin: admin@deutschlernen.com<br />
-              Student: student@deutschlernen.com
-            </p>
-          </div>
         </div>
       </div>
     </div>

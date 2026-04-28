@@ -1,15 +1,38 @@
 import { Outlet, Link, useLocation } from "react-router";
 import { BookOpen, LogOut, User } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { authService } from "../../services/auth.service";
 
 export function Root() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(() => !!authService.getTokens());
+  const [isAdmin, setIsAdmin] = useState(() => authService.getPayload()?.role === "ADMIN");
+  const [user, setUser] = useState<any>(() => authService.getLocalUserProfile());
   const location = useLocation();
 
+  useEffect(() => {
+    const initializeAuth = async () => {
+      const payload = authService.getPayload();
+      if (payload) {
+        try {
+          const userProfile = await authService.getUserProfile();
+          setUser(userProfile);
+          setIsLoggedIn(true);
+          setIsAdmin(payload.role === "ADMIN");
+        } catch (e) {
+          authService.clearTokens();
+          setUser(null);
+          setIsLoggedIn(false);
+        }
+      }
+    };
+    initializeAuth();
+  }, []);
+
   const handleLogout = () => {
+    authService.clearTokens();
     setIsLoggedIn(false);
     setIsAdmin(false);
+    setUser(null);
   };
 
   return (
@@ -47,7 +70,7 @@ export function Root() {
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2">
                   <User className="w-5 h-5" />
-                  <span>User</span>
+                  <span>{user?.fullName || "User"}</span>
                 </div>
                 <button
                   onClick={handleLogout}
@@ -78,7 +101,7 @@ export function Root() {
       </header>
 
       <main className="flex-1">
-        <Outlet context={{ isLoggedIn, setIsLoggedIn, isAdmin, setIsAdmin }} />
+        <Outlet context={{ isLoggedIn, setIsLoggedIn, isAdmin, setIsAdmin, user, setUser }} />
       </main>
 
       <footer className="bg-black text-gray-300 border-t-4 border-yellow-500">
