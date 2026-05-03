@@ -1,5 +1,6 @@
 import { useParams, Link, useNavigate } from "react-router";
 import { ArrowLeft, CheckCircle } from "lucide-react";
+import VideoPlayer from "./VideoPlayer";
 
 const mockLessonContent: any = {
   "1": {
@@ -97,6 +98,16 @@ export function LessonView() {
       </div>
 
       <div className="max-w-4xl mx-auto py-12 px-4">
+        {courseId === "1" && lessonId === "1" && (
+          <div className="mb-8">
+            <VideoPlayer
+              courseId={1}
+              lessonId={1}
+              onEnded={() => console.log("Video finished")}
+            />
+          </div>
+        )}
+
         <div className="bg-white rounded-lg shadow-lg p-8 mb-8 border-t-4 border-red-600">
           <div
             className="lesson-content prose max-w-none"
