@@ -27,7 +27,7 @@ export interface UserProfile {
   role?: string;
 }
 
-const API_BASE_URL = "http://localhost:8080";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8080";
 
 export const authService = {
   async register(data: RegisterRequest): Promise<RegisterResponse> {

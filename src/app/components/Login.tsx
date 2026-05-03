@@ -1,7 +1,7 @@
 import { useNavigate, useOutletContext, Link } from "react-router";
 import { useState } from "react";
 import { Mail, Lock, AlertCircle, Loader2 } from "lucide-react";
-import { authService } from "../services/auth.service";
+import { authService } from "../../services/auth.service";
 
 export function Login() {
   const navigate = useNavigate();
